@@ -1,0 +1,90 @@
+---
+title: "MonteCarloSimulation-Genetic Algorithms"
+author: "Thomas K John"
+date: "September 26, 2017"
+output:
+  pdf_document:
+    toc: yes
+    toc_depth: 2
+  html_document:
+    toc: yes
+    toc_depth: 3
+    toc_float: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+# MonteCarlo SImulations
+### Clear all the environment variables
+```{r}
+rm(list=ls(all=TRUE))
+```
+###Defining the function for the activity
+```{r}
+timeRequired = function(number.simulations){
+  time = 0
+  for(i in 1: number.simulations){
+    # Probability for the Full project is 90% amd for Part project is 10%
+    partOrFull = runif(1,0,1)
+    if(partOrFull <= 0.1) {
+      total.module = sample(10:12,1)
+    }
+    else{
+      total.module = sample(20:24,1)
+    }
+    # Task and the people per module are represented by two vectors randomly.
+    tasks.per.module = sample(50:100, total.module, replace = T)
+    total.tasks = sum(tasks.per.module)
+    
+    # Total time taken for all the tasks: Each task can take any time between 5 to 10 hours to get completed.
+    tasks.time = sum(sample(5:10,total.tasks,replace = T)) 
+    # Randomly pick the number of resources
+    resources = sample(3:7,1,replace = TRUE)
+    # Time taken to complete the project
+    time.taken.estimate = tasks.time/ resources
+  }
+  return (time.taken.estimate)
+}
+```
+### Running the simulations
+```{r}
+simulations = c(10,100,10000, 100000, 200000, 300000, 100000, 200000, 300000)
+for (i in simulations) {
+  total.project.time = timeRequired(i)
+  cat("Total Estimated Time to complete the project with",i," simulations is ",total.project.time,"\n")
+}
+```
+# Genetic Algorithm
+### Clear all the environment variables
+```{r}
+rm(list = ls(all=TRUE))
+```
+### Loading the required package
+```{r}
+library(GA)
+```
+### Setting the working directory
+```{r}
+setwd("I:/DATA-SCIENCE/Insofe/Assignments/MonteCarlo-GA/assignment-mcs-ga-Thomas-K-John-master")
+```
+### Reading the file
+```{r}
+tsp.distance.data = read.csv("distanceinfo.csv", header =TRUE)
+```
+### Implementation of the algorithm
+```{r}
+rownames(tsp.distance.data) = colnames(tsp.distance.data)
+tsp.distance.data = as.matrix(tsp.distance.data)
+
+tour.length = function(tour, dist.matrix) {
+  tour = c(tour, tour[1])
+  route = embed(tour, 2)[,2:1]
+  sum(dist.matrix[route])
+}
+tsp.fitness = function(tour, ...) 1/tour.length(tour, ...)
+
+tsp.solution.model = ga(type="permutation", fitness=tsp.fitness, dist.matrix=tsp.distance.data, min=1, max=10, pmutation=0.2, names=rownames(data))
+
+summary(tsp.solution.model)
+```
